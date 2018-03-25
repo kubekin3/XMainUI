@@ -49,24 +49,26 @@ public class XMain implements IXposedHookLoadPackage, IXposedHookInitPackageReso
     static int mEvc_Evol_workmode;
     static String lastAddrBluetooth;
 
+    static boolean micGain = false;
+
     class KeyDef {
         public static final int SKEY_SEEKUP_2 = 785;
         public static final int SKEY_CHUP_1 = 794;
-        public static final int PKEY_RIGHT =69;
-        public static final int RKEY_RIGHT =287;
-        public static final int PKEY_NEXT =44;
-        public static final int RKEY_NEXT =291;
+        public static final int PKEY_RIGHT = 69;
+        public static final int RKEY_RIGHT = 287;
+        public static final int PKEY_NEXT = 44;
+        public static final int RKEY_NEXT = 291;
 
-        public static final int PKEY_UP =66;
+        public static final int PKEY_UP = 66;
 
-        public static final int SKEY_SEEKDN_2 =790;
-        public static final int SKEY_CHDN_1 =799;
-        public static final int PKEY_LEFT =68;
-        public static final int RKEY_LEFT =288;
-        public static final int PKEY_PRE =45;
-        public static final int RKEY_PRE =292;
+        public static final int SKEY_SEEKDN_2 = 790;
+        public static final int SKEY_CHDN_1 = 799;
+        public static final int PKEY_LEFT = 68;
+        public static final int RKEY_LEFT = 288;
+        public static final int PKEY_PRE = 45;
+        public static final int RKEY_PRE = 292;
 
-        public static final int PKEY_DN =67;
+        public static final int PKEY_DN = 67;
     }
 
     public void handleLoadPackage(final LoadPackageParam paramLoadPackageParam) throws Throwable {
@@ -97,10 +99,6 @@ public class XMain implements IXposedHookLoadPackage, IXposedHookInitPackageReso
                         Log.d("BtCallMsgbox", "BTN_KB");
                         param.setResult(0);
                     }
-//                    switch (((Integer) v.getTag()).intValue()) {
-
-
-                    param.setResult(0);
                 }
             });
 
@@ -261,13 +259,13 @@ public class XMain implements IXposedHookLoadPackage, IXposedHookInitPackageReso
 
             // заменяем действие кнопок переключится на станцию к поиску станции в радио
             Class RadioFuncClass = XposedHelpers.findClass("com.ts.main.radio.RadioFunc", paramLoadPackageParam.classLoader);
-            XposedHelpers.findAndHookMethod(MainUIClass, "DealKey", int.class, new XC_MethodHook() {
+            XposedHelpers.findAndHookMethod(RadioFuncClass, "DealKey", int.class, new XC_MethodHook() {
                 @Override
                 protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                     int nkey = (int) param.args[0];
 
-XposedBridge.log(String.valueOf(nkey));
-                    switch (nkey){
+                    XposedBridge.log(String.valueOf(nkey));
+                    switch (nkey) {
                         case KeyDef.SKEY_SEEKUP_2 /*785*/:
                         case KeyDef.SKEY_CHUP_1 /*794*/:
                         case KeyDef.PKEY_RIGHT /*69*/:
