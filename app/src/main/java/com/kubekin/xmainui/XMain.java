@@ -76,6 +76,13 @@ public class XMain implements IXposedHookLoadPackage, IXposedHookInitPackageReso
         public static final int PKEY_DN = 67;
     }
 
+    private void setViewPos(View view, int x, int y, int w, int h) {
+        RelativeLayout.LayoutParams rl = new RelativeLayout.LayoutParams(w, h);
+        rl.leftMargin = x;
+        rl.topMargin = y - 60;
+        view.setLayoutParams(rl);
+    }
+
     public void handleLoadPackage(final LoadPackageParam paramLoadPackageParam) throws Throwable {
 
         if (paramLoadPackageParam.packageName.equals("com.ts.MainUI")) {
@@ -85,21 +92,20 @@ public class XMain implements IXposedHookLoadPackage, IXposedHookInitPackageReso
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                     RelativeLayout mLayout = (RelativeLayout) XposedHelpers.getObjectField(param.thisObject, "mLayout");
-                    Object mWarnBelt = XposedHelpers.getObjectField(param.thisObject, "mWarnBelt");
-                    Object mWarnBrake = XposedHelpers.getObjectField(param.thisObject, "mWarnBrake");
-                    Object mWarnTrunk = XposedHelpers.getObjectField(param.thisObject, "mWarnTrunk");
-                    Object mWarnWash = XposedHelpers.getObjectField(param.thisObject, "mWarnWash");
-                    Object mWarnBattery = XposedHelpers.getObjectField(param.thisObject, "mWarnBattery");
-                    Object mWarnOil = XposedHelpers.getObjectField(param.thisObject, "mWarnOil");
+                    View mWarnBelt = (View) XposedHelpers.getObjectField(param.thisObject, "mWarnBelt");
+                    View mWarnBrake = (View) XposedHelpers.getObjectField(param.thisObject, "mWarnBrake");
+                    View mWarnTrunk = (View) XposedHelpers.getObjectField(param.thisObject, "mWarnTrunk");
+                    View mWarnWash = (View) XposedHelpers.getObjectField(param.thisObject, "mWarnWash");
+                    View mWarnBattery = (View) XposedHelpers.getObjectField(param.thisObject, "mWarnBattery");
+                    View mWarnOil = (View) XposedHelpers.getObjectField(param.thisObject, "mWarnOil");
 
-                    XposedHelpers.callMethod(param.thisObject, "setViewPos", mLayout, mWarnOil, 57, 93, 92, 93);
-                    XposedHelpers.callMethod(param.thisObject, "setViewPos", mLayout, mWarnBattery, 57, 464, 92, 93);
+                    setViewPos(mWarnOil, 57, 93, 92, 93);
+                    setViewPos(mWarnBattery, 57, 464, 92, 93);
 
-
-                    XposedHelpers.callMethod(param.thisObject, "setViewPos", mLayout, mWarnBelt, 306, 93, 92, 93);
-                    XposedHelpers.callMethod(param.thisObject, "setViewPos", mLayout, mWarnTrunk, 306, 217, 92, 93);
-                    XposedHelpers.callMethod(param.thisObject, "setViewPos", mLayout, mWarnBrake, 306, 340, 92, 93);
-                    XposedHelpers.callMethod(param.thisObject, "setViewPos", mLayout, mWarnWash, 306, 464, 92, 93);
+                    setViewPos(mWarnBelt, 306, 93, 92, 93);
+                    setViewPos(mWarnTrunk, 306, 217, 92, 93);
+                    setViewPos(mWarnBrake, 306, 340, 92, 93);
+                    setViewPos(mWarnWash, 306, 464, 92, 93);
 
                 }
             });
@@ -507,7 +513,7 @@ public class XMain implements IXposedHookLoadPackage, IXposedHookInitPackageReso
     }
 
     public void handleInitPackageResources(InitPackageResourcesParam resparam) throws Throwable {
-        if (resparam.packageName.equals("com.ts.MainUI")){
+        if (resparam.packageName.equals("com.ts.MainUI")) {
             resparam.res.setReplacement("com.ts.MainUI", "string", "title_activity_sdmain", "Музыка");
             resparam.res.setReplacement("com.ts.MainUI", "string", "title_activity_dvd_main", "Диск");
             resparam.res.setReplacement("com.ts.MainUI", "string", "title_activity_usbmain", "Видео");
@@ -528,10 +534,10 @@ public class XMain implements IXposedHookLoadPackage, IXposedHookInitPackageReso
             resparam.res.setReplacement("com.ts.MainUI", "string", "can_curspeed", "Скорость");
             resparam.res.setReplacement("com.ts.MainUI", "string", "can_range", "Пробег");
 
-            int canvw_car3_up  = resparam.res.getIdentifier("canvw_car3_up", "drawable", "com.ts.MainUI");
+            int canvw_car3_up = resparam.res.getIdentifier("canvw_car3_up", "drawable", "com.ts.MainUI");
             resparam.res.setReplacement("com.ts.MainUI", "drawable", "canvw_car2_up", resparam.res.getDrawable(canvw_car3_up));
 
-            int canvw_car3trunk_dn  = resparam.res.getIdentifier("canvw_car3trunk_dn", "drawable", "com.ts.MainUI");
+            int canvw_car3trunk_dn = resparam.res.getIdentifier("canvw_car3trunk_dn", "drawable", "com.ts.MainUI");
             resparam.res.setReplacement("com.ts.MainUI", "drawable", "canvw_car2trunk_dn", resparam.res.getDrawable(canvw_car3trunk_dn));
         }
 
@@ -551,7 +557,7 @@ public class XMain implements IXposedHookLoadPackage, IXposedHookInitPackageReso
                     Button volmodename = liparam.view.findViewById(
                             liparam.res.getIdentifier("volmodename", "id", "com.ts.MainUI"));
 
-                    volmodename.setGravity(Gravity.RIGHT|Gravity.CENTER_VERTICAL);
+                    volmodename.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
                 }
             });
         }
