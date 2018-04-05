@@ -10,12 +10,17 @@ import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.res.XModuleResources;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.SeekBar;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
@@ -74,10 +79,81 @@ public class XMain implements IXposedHookLoadPackage, IXposedHookInitPackageReso
     public void handleLoadPackage(final LoadPackageParam paramLoadPackageParam) throws Throwable {
 
         if (paramLoadPackageParam.packageName.equals("com.ts.MainUI")) {
+            Class CustomImgViewClass = XposedHelpers.findClass("com.ts.customctrl.CustomImgView", paramLoadPackageParam.classLoader);
+            Class CanVwCarInfoActivityClass = XposedHelpers.findClass("com.ts.can.CanVwCarInfoActivity", paramLoadPackageParam.classLoader);
+            XposedHelpers.findAndHookMethod(CanVwCarInfoActivityClass, "InitUI", new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                    RelativeLayout mLayout = (RelativeLayout) XposedHelpers.getObjectField(param.thisObject, "mLayout");
+                    Object mWarnBelt = XposedHelpers.getObjectField(param.thisObject, "mWarnBelt");
+                    Object mWarnBrake = XposedHelpers.getObjectField(param.thisObject, "mWarnBrake");
+                    Object mWarnTrunk = XposedHelpers.getObjectField(param.thisObject, "mWarnTrunk");
+                    Object mWarnWash = XposedHelpers.getObjectField(param.thisObject, "mWarnWash");
+                    Object mWarnBattery = XposedHelpers.getObjectField(param.thisObject, "mWarnBattery");
+                    Object mWarnOil = XposedHelpers.getObjectField(param.thisObject, "mWarnOil");
+
+                    XposedHelpers.callMethod(param.thisObject, "setViewPos", mLayout, mWarnOil, 57, 93, 92, 93);
+                    XposedHelpers.callMethod(param.thisObject, "setViewPos", mLayout, mWarnBattery, 57, 464, 92, 93);
+
+
+                    XposedHelpers.callMethod(param.thisObject, "setViewPos", mLayout, mWarnBelt, 306, 93, 92, 93);
+                    XposedHelpers.callMethod(param.thisObject, "setViewPos", mLayout, mWarnTrunk, 306, 217, 92, 93);
+                    XposedHelpers.callMethod(param.thisObject, "setViewPos", mLayout, mWarnBrake, 306, 340, 92, 93);
+                    XposedHelpers.callMethod(param.thisObject, "setViewPos", mLayout, mWarnWash, 306, 464, 92, 93);
+
+                }
+            });
+
+            XposedHelpers.findAndHookMethod(CanVwCarInfoActivityClass, "ShowWarn", new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                    XposedHelpers.setBooleanField(param.thisObject, "mfgWarn", false);
+                    XposedHelpers.setBooleanField(param.thisObject, "mfgDoorOpen", false);
+                }
+
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                    Object mInfo2 = XposedHelpers.getObjectField(param.thisObject, "mInfo2");
+
+                    String mStrOil = String.format("%d л", XposedHelpers.getIntField(mInfo2, "RemainOil"));
+                    String mStrOutTemp = String.format("%.1f °c", XposedHelpers.getIntField(mInfo2, "OutTemp") * 0.1);
+                    String mStrBattery = String.format("%.1f в", XposedHelpers.getIntField(mInfo2, "Voltage") * 0.01);
+                    String mStrRpm = String.format("%d об", XposedHelpers.getIntField(mInfo2, "Rpm"));
+                    String mStrSpeed = String.format("%d км/ч", XposedHelpers.getIntField(mInfo2, "CurSpeed") * 0.01);
+                    String mStrRange = String.format("%d км", XposedHelpers.getIntField(mInfo2, "Range"));
+
+                    Object mIcoOil = XposedHelpers.getObjectField(param.thisObject, "mIcoOil");
+                    Object mIcoOutTemp = XposedHelpers.getObjectField(param.thisObject, "mIcoOil");
+                    Object mIcoBattery = XposedHelpers.getObjectField(param.thisObject, "mIcoOil");
+                    Object mRpm = XposedHelpers.getObjectField(param.thisObject, "mIcoOil");
+                    Object mSpeed = XposedHelpers.getObjectField(param.thisObject, "mIcoOil");
+                    Object mRange = XposedHelpers.getObjectField(param.thisObject, "mIcoOil");
+
+                    XposedHelpers.callMethod(mIcoOil, "SetValue", mStrOil);
+                    XposedHelpers.callMethod(mIcoOutTemp, "SetValue", mStrOutTemp);
+                    XposedHelpers.callMethod(mIcoBattery, "SetValue", mStrBattery);
+                    XposedHelpers.callMethod(mRpm, "SetValue", mStrRpm);
+                    XposedHelpers.callMethod(mSpeed, "SetValue", mStrSpeed);
+                    XposedHelpers.callMethod(mRange, "SetValue", mStrRange);
+                }
+            });
+
+            XposedHelpers.findAndHookMethod(CanVwCarInfoActivityClass, "SetWarnIco", CustomImgViewClass, boolean.class, new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                    XposedHelpers.callMethod(param.args[0], "Show", param.args[1]);
+                    if ((Boolean) param.args[1] == true) {
+                        XposedHelpers.callMethod(param.args[0], "setSelected", param.args[1]);
+                    }
+
+                    param.setResult(0);
+
+                }
+            });
 
             // непоказвать окон по кану
-            Class BtCallMsgboxClass = XposedHelpers.findClass("com.ts.can.CanFunc", paramLoadPackageParam.classLoader);
-            XposedHelpers.findAndHookMethod(BtCallMsgboxClass, "showCanActivity", Class.class, new XC_MethodHook() {
+            Class CanFuncClass = XposedHelpers.findClass("com.ts.can.CanFunc", paramLoadPackageParam.classLoader);
+            XposedHelpers.findAndHookMethod(CanFuncClass, "showCanActivity", Class.class, new XC_MethodHook() {
                 @Override
                 protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                     param.setResult(0);
@@ -172,9 +248,10 @@ public class XMain implements IXposedHookLoadPackage, IXposedHookInitPackageReso
 
                     int profilestate = intent.getIntExtra("android.bluetooth.profilemanager.extra.EXTRA_NEW_STATE", 2);
                     if (profilestate == 1) {
+                        XposedHelpers.setStaticObjectField(param.thisObject.getClass(), "mbFirstConnect", true);
                         XposedHelpers.setStaticObjectField(param.thisObject.getClass(), "mLastDeviceAddr", lastAddrBluetooth);
+                        //XposedHelpers.callMethod(param.thisObject, "pbSync", false);
                     }
-
                 }
             });
         }
@@ -430,6 +507,55 @@ public class XMain implements IXposedHookLoadPackage, IXposedHookInitPackageReso
     }
 
     public void handleInitPackageResources(InitPackageResourcesParam resparam) throws Throwable {
+        if (resparam.packageName.equals("com.ts.MainUI")){
+            resparam.res.setReplacement("com.ts.MainUI", "string", "title_activity_sdmain", "Музыка");
+            resparam.res.setReplacement("com.ts.MainUI", "string", "title_activity_dvd_main", "Диск");
+            resparam.res.setReplacement("com.ts.MainUI", "string", "title_activity_usbmain", "Видео");
+
+            resparam.res.setReplacement("com.ts.MainUI", "string", "vol_common_mainvol", "Громкость");
+            resparam.res.setReplacement("com.ts.MainUI", "string", "vol_common_btvol", "Громкость");
+            resparam.res.setReplacement("com.ts.MainUI", "string", "vol_common_navivol", "Громкость");
+            resparam.res.setReplacement("com.ts.MainUI", "string", "vol_common_mut", "Тихо");
+
+            resparam.res.setReplacement("com.ts.MainUI", "string", "can_rest_oil", "Топливо");
+            resparam.res.setReplacement("com.ts.MainUI", "string", "can_out_temp", "Температура");
+            resparam.res.setReplacement("com.ts.MainUI", "string", "can_battery", "Аккумулятор");
+            resparam.res.setReplacement("com.ts.MainUI", "string", "can_belt", "Ремень");
+            resparam.res.setReplacement("com.ts.MainUI", "string", "can_trunk", "Багажник");
+            resparam.res.setReplacement("com.ts.MainUI", "string", "can_brake", "Ручник");
+            resparam.res.setReplacement("com.ts.MainUI", "string", "can_wash", "Омыватель");
+            resparam.res.setReplacement("com.ts.MainUI", "string", "can_rpm", "Обороты");
+            resparam.res.setReplacement("com.ts.MainUI", "string", "can_curspeed", "Скорость");
+            resparam.res.setReplacement("com.ts.MainUI", "string", "can_range", "Пробег");
+
+            int canvw_car3_up  = resparam.res.getIdentifier("canvw_car3_up", "drawable", "com.ts.MainUI");
+            resparam.res.setReplacement("com.ts.MainUI", "drawable", "canvw_car2_up", resparam.res.getDrawable(canvw_car3_up));
+
+            int canvw_car3trunk_dn  = resparam.res.getIdentifier("canvw_car3trunk_dn", "drawable", "com.ts.MainUI");
+            resparam.res.setReplacement("com.ts.MainUI", "drawable", "canvw_car2trunk_dn", resparam.res.getDrawable(canvw_car3trunk_dn));
+        }
+
+        if (resparam.packageName.equals("com.ts.MainUI")) {
+            resparam.res.hookLayout("com.ts.MainUI", "layout", "common_volume", new XC_LayoutInflated() {
+                @Override
+                public void handleLayoutInflated(LayoutInflatedParam liparam) throws Throwable {
+                    SeekBar seekBar1 = (SeekBar) liparam.view.findViewById(
+                            liparam.res.getIdentifier("seekBar1", "id", "com.ts.MainUI"));
+
+                    RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) seekBar1.getLayoutParams();
+                    layoutParams.width = 740 - 40;
+                    layoutParams.leftMargin = 173 + 40;
+
+                    seekBar1.setLayoutParams(layoutParams);
+
+                    Button volmodename = liparam.view.findViewById(
+                            liparam.res.getIdentifier("volmodename", "id", "com.ts.MainUI"));
+
+                    volmodename.setGravity(Gravity.RIGHT|Gravity.CENTER_VERTICAL);
+                }
+            });
+        }
+
         if (resparam.packageName.equals("com.android.systemui")) {
             resparam.res.hookLayout("com.android.systemui", "layout", "status_bar", new XC_LayoutInflated() {
                 @Override
